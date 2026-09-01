@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import re
 
 ROOT=Path('.')
@@ -7,7 +8,8 @@ css=css_path.read_text(encoding='utf-8')
 
 # Static site: collect every class present in real HTML plus JS class/selectors.
 used=set()
-for p in list(Path('fr').rglob('*.html'))+list(Path('en').rglob('*.html'))+list(Path('ar').rglob('*.html'))+[Path('index.html')]:
+html_files=(list(Path('fr').rglob('*.html'))+list(Path('en').rglob('*.html'))+list(Path('ar').rglob('*.html'))+[Path('index.html'),Path('404.html')])
+for p in html_files:
     text=p.read_text(encoding='utf-8')
     for m in re.finditer(r'class=["\']([^"\']+)["\']',text,re.I):
         used.update(m.group(1).split())
@@ -43,9 +45,6 @@ def find_matching(text,start):
 def clean_block(text):
     out=[]; i=0; removed=0; kept=0
     while i<len(text):
-        # preserve whitespace/comments before next rule
-        j=i
-        # find next top-level '{' or ';' for at-rule without block
         quote=None; in_comment=False; esc=False; brace=-1; semi=-1; k=i
         while k<len(text):
             ch=text[k]; nxt=text[k+1] if k+1<len(text) else ''
@@ -76,13 +75,11 @@ def clean_block(text):
             name=stripped.split(None,1)[0].lower()
             if name in ('@media','@supports','@layer','@container'):
                 cleaned,r,kp=clean_block(body);removed+=r;kept+=kp
-                # Keep surrounding at-rule if content still has a qualified/at rule.
                 if cleaned.strip():out.append(pre+'{'+cleaned+'}');kept+=1
             else:
                 out.append(pre+'{'+body+'}');kept+=1
         else:
             classes=set(re.findall(r'\.([A-Za-z_][A-Za-z0-9_-]*)',stripped))
-            # Conservative removal: only if the rule references classes and NONE exist anywhere in real site content.
             if classes and classes.isdisjoint(used):
                 removed+=1
             else:
@@ -91,7 +88,6 @@ def clean_block(text):
     return ''.join(out),removed,kept
 
 cleaned,removed,kept=clean_block(css)
-# Normalize excessive blank lines only; do not minify, to keep maintainability.
 cleaned=re.sub(r'\n{4,}','\n\n\n',cleaned)
 old_bytes=len(css.encode('utf-8'));new_bytes=len(cleaned.encode('utf-8'))
 old_imp=css.count('!important');new_imp=cleaned.count('!important')
@@ -101,3 +97,40 @@ print(f'CSS_BYTES={old_bytes}->{new_bytes} ({old_bytes-new_bytes} saved)')
 print(f'IMPORTANT_COUNT={old_imp}->{new_imp}')
 if cleaned!=css:
     css_path.write_text(cleaned,encoding='utf-8')
+
+# Keep CollectionPage structured data aligned with the final visible portfolio metadata.
+portfolio_meta={
+    'fr':(
+        'Portfolio & études de marque à Fès — MAQTA',
+        'Découvrez les études conceptuelles MAQTA à Fès : identité visuelle, print, signalétique, marquage véhicule, e-commerce et design digital.'
+    ),
+    'en':(
+        'Portfolio & brand studies in Fès — MAQTA',
+        'Explore MAQTA concept studies in Fès: brand identity, print, signage, vehicle graphics, e-commerce and digital design.'
+    ),
+    'ar':(
+        'معرض الأعمال والدراسات البصرية في فاس — MAQTA',
+        'اكتشف الدراسات التصورية لـMAQTA في فاس: الهوية البصرية والطباعة والإشهار وقص الفينيل وإشهار المركبات والمتاجر الإلكترونية.'
+    )
+}
+for lang,(name,description) in portfolio_meta.items():
+    p=Path(lang)/'work/index.html'
+    text=p.read_text(encoding='utf-8')
+    m=re.search(r'(<script type="application/ld\+json">)(.*?)(</script>)',text,re.S)
+    if not m:
+        raise SystemExit(f'Missing JSON-LD in {p}')
+    data=json.loads(m.group(2))
+    graph=data.get('@graph',[])
+    found=False
+    for node in graph:
+        if node.get('@type')=='CollectionPage':
+            node['name']=name
+            node['description']=description
+            found=True
+    if not found:
+        raise SystemExit(f'Missing CollectionPage node in {p}')
+    compact=json.dumps(data,ensure_ascii=False,separators=(',',':'))
+    updated=text[:m.start(2)]+compact+text[m.end(2):]
+    if updated!=text:
+        p.write_text(updated,encoding='utf-8')
+        print(f'SCHEMA_SYNCED={p}')
