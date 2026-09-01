@@ -77,6 +77,9 @@ def clean_block(text):
 
 cleaned,removed,kept=clean_block(css)
 cleaned=re.sub(r'\n{4,}','\n\n\n',cleaned)
+# Contact card is light; local NAP/hours must use dark text for readable contrast.
+cleaned=cleaned.replace('.contact-local-facts strong{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(243,239,230,.62)}','.contact-local-facts strong{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--oxide)}')
+cleaned=cleaned.replace('.contact-local-facts span{display:inline-block;margin-top:5px;font-size:13px;line-height:1.55;color:#F3EFE6}','.contact-local-facts span{display:inline-block;margin-top:5px;font-size:13px;line-height:1.55;color:var(--ink)}')
 old_bytes=len(css.encode('utf-8'));new_bytes=len(cleaned.encode('utf-8'))
 old_imp=css.count('!important');new_imp=cleaned.count('!important')
 print(f'CSS_RULES_REMOVED={removed}')
