@@ -6,18 +6,15 @@ ROOT=Path('.')
 css_path=Path('assets/site.css')
 css=css_path.read_text(encoding='utf-8')
 
-# Static site: collect every class present in real HTML plus JS class/selectors.
 used=set()
 html_files=(list(Path('fr').rglob('*.html'))+list(Path('en').rglob('*.html'))+list(Path('ar').rglob('*.html'))+[Path('index.html'),Path('404.html')])
 for p in html_files:
     text=p.read_text(encoding='utf-8')
-    for m in re.finditer(r'class=["\']([^"\']+)["\']',text,re.I):
-        used.update(m.group(1).split())
+    for m in re.finditer(r'class=["\']([^"\']+)["\']',text,re.I): used.update(m.group(1).split())
 js=Path('assets/site.js').read_text(encoding='utf-8')
 used.update(re.findall(r'\.([A-Za-z_][A-Za-z0-9_-]*)',js))
 used.update(re.findall(r'classList\.(?:add|remove|toggle)\(["\']([A-Za-z_][A-Za-z0-9_-]*)',js))
 used.update({'active','open','in','reveal'})
-
 
 def find_matching(text,start):
     depth=0; quote=None; esc=False; in_comment=False; i=start
@@ -40,7 +37,6 @@ def find_matching(text,start):
         i+=1
     return -1
 
-
 def clean_block(text):
     out=[]; i=0; removed=0; kept=0
     while i<len(text):
@@ -60,14 +56,10 @@ def clean_block(text):
             if ch=='{':brace=k;break
             if ch==';':semi=k;break
             k+=1
-        if brace<0:
-            out.append(text[i:]);break
-        if semi>=0 and semi<brace:
-            out.append(text[i:semi+1]);i=semi+1;continue
-        pre=text[i:brace]
-        end=find_matching(text,brace)
-        if end<0:
-            out.append(text[i:]);break
+        if brace<0: out.append(text[i:]);break
+        if semi>=0 and semi<brace: out.append(text[i:semi+1]);i=semi+1;continue
+        pre=text[i:brace]; end=find_matching(text,brace)
+        if end<0: out.append(text[i:]);break
         body=text[brace+1:end]
         stripped=re.sub(r'/\*.*?\*/','',pre,flags=re.S).strip()
         if stripped.startswith('@'):
@@ -75,8 +67,7 @@ def clean_block(text):
             if name in ('@media','@supports','@layer','@container'):
                 cleaned,r,kp=clean_block(body);removed+=r;kept+=kp
                 if cleaned.strip():out.append(pre+'{'+cleaned+'}');kept+=1
-            else:
-                out.append(pre+'{'+body+'}');kept+=1
+            else: out.append(pre+'{'+body+'}');kept+=1
         else:
             classes=set(re.findall(r'\.([A-Za-z_][A-Za-z0-9_-]*)',stripped))
             if classes and classes.isdisjoint(used): removed+=1
@@ -94,7 +85,6 @@ print(f'CSS_BYTES={old_bytes}->{new_bytes} ({old_bytes-new_bytes} saved)')
 print(f'IMPORTANT_COUNT={old_imp}->{new_imp}')
 if cleaned!=css: css_path.write_text(cleaned,encoding='utf-8')
 
-# Keep CollectionPage structured data aligned with the final visible portfolio metadata.
 portfolio_meta={
     'fr':('Portfolio & études de marque à Fès — MAQTA','Découvrez les études conceptuelles MAQTA à Fès : identité visuelle, print, signalétique, marquage véhicule, e-commerce et design digital.'),
     'en':('Portfolio & brand studies in Fès — MAQTA','Explore MAQTA concept studies in Fès: brand identity, print, signage, vehicle graphics, e-commerce and digital design.'),
@@ -106,41 +96,30 @@ for lang,(name,description) in portfolio_meta.items():
     if not m: raise SystemExit(f'Missing JSON-LD in {p}')
     data=json.loads(m.group(2)); found=False
     for node in data.get('@graph',[]):
-        if node.get('@type')=='CollectionPage':
-            node['name']=name; node['description']=description; found=True
+        if node.get('@type')=='CollectionPage': node['name']=name; node['description']=description; found=True
     if not found: raise SystemExit(f'Missing CollectionPage node in {p}')
     compact=json.dumps(data,ensure_ascii=False,separators=(',',':'))
     updated=text[:m.start(2)]+compact+text[m.end(2):]
-    if updated!=text:
-        p.write_text(updated,encoding='utf-8'); print(f'SCHEMA_SYNCED={p}')
+    if updated!=text: p.write_text(updated,encoding='utf-8'); print(f'SCHEMA_SYNCED={p}')
 
-# Responsive cover images: use existing 640/960 variants and reserve layout space.
-covers={
-    'nawa-cafe':'image-04-b0c31110089e',
-    'urban-move':'image-05-8047ea27b712',
-    'luna-boutique':'image-06-c047225f08a2',
-    'pure-organic':'image-07-b429438b65c0'
-}
+covers={'nawa-cafe':'image-04-b0c31110089e','urban-move':'image-05-8047ea27b712','luna-boutique':'image-06-c047225f08a2','pure-organic':'image-07-b429438b65c0'}
 for lang in ('fr','en','ar'):
-    listing=Path(lang)/'work/index.html'
-    text=listing.read_text(encoding='utf-8')
+    listing=Path(lang)/'work/index.html'; text=listing.read_text(encoding='utf-8')
     for slug,stem in covers.items():
-        src=f'../../assets/{stem}.webp'
-        pattern=rf'<img([^>]*?)\s+src="{re.escape(src)}"([^>]*)/?>'
+        src=f'../../assets/{stem}.webp'; pattern=rf'<img([^>]*?)\s+src="{re.escape(src)}"([^>]*)/?>'
         def listing_img(m,stem=stem,src=src):
             attrs=(m.group(1)+m.group(2)).strip()
-            attrs=re.sub(r'\s*(?:width|height|decoding|srcset|sizes)="[^"]*"','',attrs)
+            attrs=re.sub(r'\s*(?:width|height|decoding|srcset|sizes)="[^"]*"','',attrs).strip().rstrip('/').strip()
             return f'<img {attrs} decoding="async" width="1448" height="1086" srcset="../../assets/{stem}-640.webp 640w, ../../assets/{stem}-960.webp 960w, ../../assets/{stem}.webp 1448w" sizes="(max-width: 760px) calc(100vw - 36px), (max-width: 1160px) calc(50vw - 42px), 548px" src="{src}"/>'
         text=re.sub(pattern,listing_img,text,count=1)
     listing.write_text(text,encoding='utf-8')
 
     for slug,stem in covers.items():
         p=Path(lang)/'work'/slug/'index.html'; text=p.read_text(encoding='utf-8')
-        src=f'../../../assets/{stem}.webp'
-        pattern=rf'(<div class="project-cover">)<img([^>]*?)\s+src="{re.escape(src)}"([^>]*)/?>'
+        src=f'../../../assets/{stem}.webp'; pattern=rf'(<div class="project-cover">)<img([^>]*?)\s+src="{re.escape(src)}"([^>]*)/?>'
         def cover_img(m,stem=stem,src=src):
             attrs=(m.group(2)+m.group(3)).strip()
-            attrs=re.sub(r'\s*(?:width|height|decoding|fetchpriority|srcset|sizes)="[^"]*"','',attrs)
+            attrs=re.sub(r'\s*(?:width|height|decoding|fetchpriority|srcset|sizes)="[^"]*"','',attrs).strip().rstrip('/').strip()
             return m.group(1)+f'<img {attrs} decoding="async" fetchpriority="high" width="1448" height="1086" srcset="../../../assets/{stem}-640.webp 640w, ../../../assets/{stem}-960.webp 960w, ../../../assets/{stem}.webp 1448w" sizes="(max-width: 760px) calc(100vw - 36px), 1110px" src="{src}"/>'
         text=re.sub(pattern,cover_img,text,count=1)
         p.write_text(text,encoding='utf-8')
