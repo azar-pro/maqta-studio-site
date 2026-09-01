@@ -4872,3 +4872,31 @@ body[dir="rtl"] .service-detail-lead-grid,body[dir="rtl"] .service-detail-card{t
 @media(max-width:899px){.digital-capability{padding:10px 0 64px}.digital-capability-grid{grid-template-columns:1fr;border-radius:20px;min-height:0}.digital-capability-image{min-height:320px;max-height:420px}.digital-capability-copy{padding:42px 26px 48px}.digital-capability-copy h2{font-size:clamp(38px,12vw,58px)}.service-detail-cards.four-up{grid-template-columns:1fr}}
 html[dir="rtl"] .digital-capability-copy{text-align:right}
 html[dir="rtl"] .digital-capability-link{align-self:flex-start}
+
+
+/* MAQTA SEO semantic project-title compatibility */
+.work-project-title{font:inherit;font-family:inherit;color:inherit;}
+
+
+/* MAQTA SEO portfolio semantic-title visual parity */
+.work-copy .work-project-title{
+  margin:0;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:29px;
+  line-height:1;
+  font-weight:500;
+  letter-spacing:.01em;
+}
+body[dir="rtl"] .work-copy .work-project-title{
+  font-family:Georgia,'Times New Roman',serif;
+}
+@media(max-width:899px){
+  .work-copy .work-project-title{text-align:center;}
+}
+@media(max-width:430px){
+  .work-copy .work-project-title{font-size:25px;}
+}
+
+
+/* MAQTA SEO project-card semantic-title parity */
+.project-card-copy .project-card-title{font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:30px;margin:0 0 8px;letter-spacing:-.02em}
