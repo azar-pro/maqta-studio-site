@@ -3683,8 +3683,8 @@ body[dir="rtl"] .portfolio-capability-card h3{font-family:Tahoma,Arial,sans-seri
 .portfolio-capability-card span{margin-top:auto;padding-top:20px;color:var(--oxide);font-size:20px}
 
 .contact-local-facts{margin-top:26px;padding-top:22px;border-top:1px solid rgba(243,239,230,.16);display:grid;gap:18px}
-.contact-local-facts strong{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(243,239,230,.62)}
-.contact-local-facts span{display:inline-block;margin-top:5px;font-size:13px;line-height:1.55;color:#F3EFE6}
+.contact-local-facts strong{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--oxide)}
+.contact-local-facts span{display:inline-block;margin-top:5px;font-size:13px;line-height:1.55;color:var(--ink)}
 body[dir="rtl"] .contact-local-facts strong{letter-spacing:0;text-transform:none}
 
 .project-related-services{padding:74px 0;border-top:1px solid var(--line)}
