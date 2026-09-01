@@ -4,12 +4,7 @@
   faqItems.forEach(d=>d.addEventListener('toggle',()=>{
     if(d.open) faqItems.forEach(o=>{if(o!==d)o.open=false});
   }));
-  if('IntersectionObserver' in window){
-    const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.08});
-    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-  } else document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
-
-  const form=document.getElementById('projectForm');
+const form=document.getElementById('projectForm');
   if(form){
     form.addEventListener('submit',function(e){
       e.preventDefault();
