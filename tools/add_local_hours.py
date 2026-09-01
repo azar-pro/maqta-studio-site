@@ -1,6 +1,7 @@
 from pathlib import Path
 import json, re
 
+# Triggered after the workflow is present on the SEO branch.
 PAGES = [Path('fr/index.html'), Path('en/index.html'), Path('ar/index.html')]
 
 for path in PAGES:
