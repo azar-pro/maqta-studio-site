@@ -5,6 +5,7 @@ on:
     branches: [seo-local-2026-09]
     paths:
       - 'tools/final_predeploy_audit.py'
+      - 'tools/final_predeploy_trigger.txt'
 
 permissions:
   contents: write
