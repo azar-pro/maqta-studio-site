@@ -1,0 +1,34 @@
+name: Final MAQTA Pre-deploy Audit
+
+on:
+  push:
+    branches: [seo-local-2026-09]
+    paths:
+      - 'tools/final_predeploy_audit.py'
+
+permissions:
+  contents: write
+
+jobs:
+  audit-and-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: seo-local-2026-09
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Apply final SEO consistency fixes and audit
+        run: python tools/final_predeploy_audit.py
+      - name: Commit audited site changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fr en ar assets/site.css
+          if git diff --cached --quiet; then
+            echo "No site changes to commit"
+          else
+            git commit -m "Finalize MAQTA local SEO consistency and pre-deploy audit"
+            git push origin HEAD:seo-local-2026-09
+          fi
