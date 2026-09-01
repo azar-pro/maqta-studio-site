@@ -5,16 +5,32 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   audit:
+    if: github.head_ref == 'site-polish-2026-09'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Apply consolidated polish
+        run: python tools/apply_site_polish.py
+      - name: Commit polish when needed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fr en ar assets
+          if git diff --cached --quiet; then
+            echo "No polish changes to commit"
+          else
+            git commit -m "Apply consolidated MAQTA site polish"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
       - name: Run static audit
         run: python tools/branch_audit.py
       - name: Install browser audit tooling
