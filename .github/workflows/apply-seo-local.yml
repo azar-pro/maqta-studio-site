@@ -1,0 +1,38 @@
+name: Apply MAQTA Local SEO Patch
+
+on:
+  push:
+    branches:
+      - seo-local-2026-09
+    paths:
+      - 'tools/seo_patch.py'
+      - '.github/workflows/apply-seo-local.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: seo-local-2026-09
+          fetch-depth: 0
+
+      - name: Apply SEO patch and audit
+        run: python tools/seo_patch.py
+
+      - name: Commit generated changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fr en ar assets/site.css SEO_AUDIT_REPORT.md
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+          else
+            git commit -m "Apply technical and local SEO improvements"
+            git push origin seo-local-2026-09
+          fi
