@@ -4872,3 +4872,7 @@ body[dir="rtl"] .service-detail-lead-grid,body[dir="rtl"] .service-detail-card{t
 @media(max-width:899px){.digital-capability{padding:10px 0 64px}.digital-capability-grid{grid-template-columns:1fr;border-radius:20px;min-height:0}.digital-capability-image{min-height:320px;max-height:420px}.digital-capability-copy{padding:42px 26px 48px}.digital-capability-copy h2{font-size:clamp(38px,12vw,58px)}.service-detail-cards.four-up{grid-template-columns:1fr}}
 html[dir="rtl"] .digital-capability-copy{text-align:right}
 html[dir="rtl"] .digital-capability-link{align-self:flex-start}
+
+
+/* MAQTA SEO semantic project-title compatibility */
+.work-project-title{font:inherit;font-family:inherit;color:inherit;}
