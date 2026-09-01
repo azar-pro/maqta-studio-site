@@ -34,3 +34,4 @@ for path in PAGES:
     path.write_text(text, encoding='utf-8')
 
 print('Added Rue Bizerte / شارع بنزرت to LocalBusiness schema.')
+# Trigger workflow after workflow file exists.
