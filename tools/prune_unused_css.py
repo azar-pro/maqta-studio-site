@@ -16,7 +16,6 @@ for p in html_files:
 js=Path('assets/site.js').read_text(encoding='utf-8')
 used.update(re.findall(r'\.([A-Za-z_][A-Za-z0-9_-]*)',js))
 used.update(re.findall(r'classList\.(?:add|remove|toggle)\(["\']([A-Za-z_][A-Za-z0-9_-]*)',js))
-# Safety whitelist for common runtime/state classes.
 used.update({'active','open','in','reveal'})
 
 
@@ -80,10 +79,8 @@ def clean_block(text):
                 out.append(pre+'{'+body+'}');kept+=1
         else:
             classes=set(re.findall(r'\.([A-Za-z_][A-Za-z0-9_-]*)',stripped))
-            if classes and classes.isdisjoint(used):
-                removed+=1
-            else:
-                out.append(pre+'{'+body+'}');kept+=1
+            if classes and classes.isdisjoint(used): removed+=1
+            else: out.append(pre+'{'+body+'}');kept+=1
         i=end+1
     return ''.join(out),removed,kept
 
@@ -95,42 +92,55 @@ print(f'CSS_RULES_REMOVED={removed}')
 print(f'CSS_RULES_KEPT={kept}')
 print(f'CSS_BYTES={old_bytes}->{new_bytes} ({old_bytes-new_bytes} saved)')
 print(f'IMPORTANT_COUNT={old_imp}->{new_imp}')
-if cleaned!=css:
-    css_path.write_text(cleaned,encoding='utf-8')
+if cleaned!=css: css_path.write_text(cleaned,encoding='utf-8')
 
 # Keep CollectionPage structured data aligned with the final visible portfolio metadata.
 portfolio_meta={
-    'fr':(
-        'Portfolio & études de marque à Fès — MAQTA',
-        'Découvrez les études conceptuelles MAQTA à Fès : identité visuelle, print, signalétique, marquage véhicule, e-commerce et design digital.'
-    ),
-    'en':(
-        'Portfolio & brand studies in Fès — MAQTA',
-        'Explore MAQTA concept studies in Fès: brand identity, print, signage, vehicle graphics, e-commerce and digital design.'
-    ),
-    'ar':(
-        'معرض الأعمال والدراسات البصرية في فاس — MAQTA',
-        'اكتشف الدراسات التصورية لـMAQTA في فاس: الهوية البصرية والطباعة والإشهار وقص الفينيل وإشهار المركبات والمتاجر الإلكترونية.'
-    )
+    'fr':('Portfolio & études de marque à Fès — MAQTA','Découvrez les études conceptuelles MAQTA à Fès : identité visuelle, print, signalétique, marquage véhicule, e-commerce et design digital.'),
+    'en':('Portfolio & brand studies in Fès — MAQTA','Explore MAQTA concept studies in Fès: brand identity, print, signage, vehicle graphics, e-commerce and digital design.'),
+    'ar':('معرض الأعمال والدراسات البصرية في فاس — MAQTA','اكتشف الدراسات التصورية لـMAQTA في فاس: الهوية البصرية والطباعة والإشهار وقص الفينيل وإشهار المركبات والمتاجر الإلكترونية.')
 }
 for lang,(name,description) in portfolio_meta.items():
-    p=Path(lang)/'work/index.html'
-    text=p.read_text(encoding='utf-8')
+    p=Path(lang)/'work/index.html'; text=p.read_text(encoding='utf-8')
     m=re.search(r'(<script type="application/ld\+json">)(.*?)(</script>)',text,re.S)
-    if not m:
-        raise SystemExit(f'Missing JSON-LD in {p}')
-    data=json.loads(m.group(2))
-    graph=data.get('@graph',[])
-    found=False
-    for node in graph:
+    if not m: raise SystemExit(f'Missing JSON-LD in {p}')
+    data=json.loads(m.group(2)); found=False
+    for node in data.get('@graph',[]):
         if node.get('@type')=='CollectionPage':
-            node['name']=name
-            node['description']=description
-            found=True
-    if not found:
-        raise SystemExit(f'Missing CollectionPage node in {p}')
+            node['name']=name; node['description']=description; found=True
+    if not found: raise SystemExit(f'Missing CollectionPage node in {p}')
     compact=json.dumps(data,ensure_ascii=False,separators=(',',':'))
     updated=text[:m.start(2)]+compact+text[m.end(2):]
     if updated!=text:
-        p.write_text(updated,encoding='utf-8')
-        print(f'SCHEMA_SYNCED={p}')
+        p.write_text(updated,encoding='utf-8'); print(f'SCHEMA_SYNCED={p}')
+
+# Responsive cover images: use existing 640/960 variants and reserve layout space.
+covers={
+    'nawa-cafe':'image-04-b0c31110089e',
+    'urban-move':'image-05-8047ea27b712',
+    'luna-boutique':'image-06-c047225f08a2',
+    'pure-organic':'image-07-b429438b65c0'
+}
+for lang in ('fr','en','ar'):
+    listing=Path(lang)/'work/index.html'
+    text=listing.read_text(encoding='utf-8')
+    for slug,stem in covers.items():
+        src=f'../../assets/{stem}.webp'
+        pattern=rf'<img([^>]*?)\s+src="{re.escape(src)}"([^>]*)/?>'
+        def listing_img(m,stem=stem,src=src):
+            attrs=(m.group(1)+m.group(2)).strip()
+            attrs=re.sub(r'\s*(?:width|height|decoding|srcset|sizes)="[^"]*"','',attrs)
+            return f'<img {attrs} decoding="async" width="1448" height="1086" srcset="../../assets/{stem}-640.webp 640w, ../../assets/{stem}-960.webp 960w, ../../assets/{stem}.webp 1448w" sizes="(max-width: 760px) calc(100vw - 36px), (max-width: 1160px) calc(50vw - 42px), 548px" src="{src}"/>'
+        text=re.sub(pattern,listing_img,text,count=1)
+    listing.write_text(text,encoding='utf-8')
+
+    for slug,stem in covers.items():
+        p=Path(lang)/'work'/slug/'index.html'; text=p.read_text(encoding='utf-8')
+        src=f'../../../assets/{stem}.webp'
+        pattern=rf'(<div class="project-cover">)<img([^>]*?)\s+src="{re.escape(src)}"([^>]*)/?>'
+        def cover_img(m,stem=stem,src=src):
+            attrs=(m.group(2)+m.group(3)).strip()
+            attrs=re.sub(r'\s*(?:width|height|decoding|fetchpriority|srcset|sizes)="[^"]*"','',attrs)
+            return m.group(1)+f'<img {attrs} decoding="async" fetchpriority="high" width="1448" height="1086" srcset="../../../assets/{stem}-640.webp 640w, ../../../assets/{stem}-960.webp 960w, ../../../assets/{stem}.webp 1448w" sizes="(max-width: 760px) calc(100vw - 36px), 1110px" src="{src}"/>'
+        text=re.sub(pattern,cover_img,text,count=1)
+        p.write_text(text,encoding='utf-8')
