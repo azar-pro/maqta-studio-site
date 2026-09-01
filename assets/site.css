@@ -4876,3 +4876,23 @@ html[dir="rtl"] .digital-capability-link{align-self:flex-start}
 
 /* MAQTA SEO semantic project-title compatibility */
 .work-project-title{font:inherit;font-family:inherit;color:inherit;}
+
+
+/* MAQTA SEO portfolio semantic-title visual parity */
+.work-copy .work-project-title{
+  margin:0;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:29px;
+  line-height:1;
+  font-weight:500;
+  letter-spacing:.01em;
+}
+body[dir="rtl"] .work-copy .work-project-title{
+  font-family:Georgia,'Times New Roman',serif;
+}
+@media(max-width:899px){
+  .work-copy .work-project-title{text-align:center;}
+}
+@media(max-width:430px){
+  .work-copy .work-project-title{font-size:25px;}
+}
