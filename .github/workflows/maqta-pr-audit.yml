@@ -20,6 +20,8 @@ jobs:
           python-version: '3.12'
       - name: Apply consolidated polish
         run: python tools/apply_site_polish.py
+      - name: Conservatively prune unused CSS
+        run: python tools/prune_unused_css.py
       - name: Commit polish when needed
         run: |
           git config user.name "github-actions[bot]"
