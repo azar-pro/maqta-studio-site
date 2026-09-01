@@ -1,0 +1,35 @@
+name: MAQTA PR Audit
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run static audit
+        run: python tools/branch_audit.py
+      - name: Install browser audit tooling
+        run: |
+          python -m pip install --quiet playwright
+          python -m playwright install --with-deps chromium
+      - name: Start local static site
+        run: |
+          python -m http.server 8080 --bind 127.0.0.1 >/tmp/maqta-http.log 2>&1 &
+          sleep 2
+      - name: Run visual browser audit
+        run: python tools/visual_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: maqta-quality-audit
+          path: audit/
+          if-no-files-found: warn
