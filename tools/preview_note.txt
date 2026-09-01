@@ -1,3 +1,4 @@
 Preview branch for MAQTA comprehensive site polish. Do not merge until final review.
 Trigger PR audit after base workflow installation.
 Trigger consolidated polish pass.
+Trigger post-polish visual review.
